@@ -21,3 +21,6 @@ R -45
 - R se refere à transformação de rotação. Aṕos o R vem o ângulo da rotação em graus
 
 Pressione ESPAÇO para atualizar as informações do arquivos 'shape' e 'transformations' com a aplicação rodando.
+
+Para compilar, crie uma pasta com o nome 'bin' e use o comando
+gcc -o bin/main main.c shape.c mat.c transform.c -lGL -lGLU -lglut -lm
