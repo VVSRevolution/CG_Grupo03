@@ -25,13 +25,12 @@ int main(int argc, char **argv)
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
     // glutInitWindowPosition(100, 100);
-    glutCreateWindow("Template");
+    glutCreateWindow("Trabalho 1");
 
     // OpenGL setup
     glClearColor(1.0, 1.0, 1.0, 0.0);
     glShadeModel(GL_FLAT);
     double aspectRatio = (double) WINDOW_WIDTH / (double) WINDOW_HEIGHT;
-    // Left = -10, Right = 10, Bottom = -1, Top = 1, Near = -1, Far = 1
     glOrtho(-10.0, 10.0, -10.0 / aspectRatio, 10.0 / aspectRatio, -1, 1);
 
     // Set callback functions
