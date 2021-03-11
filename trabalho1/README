@@ -1,0 +1,23 @@
+Código do primeiro trabalho de computação gráfica sobre transformações geométricas: translação, rotação e escala.
+
+A aplicação foi construída de tal forma que é possível definir o polígono e as transformações aplicadas nele sem precisar recompilar o código.
+
+Para definir o polígono basta editar o arquivo 'shape' que tem o seguinte formato:
+N
+x1 y1
+x2 y2
+...
+xN yN
+
+N é a quantidade de pontos e as N linhas seguintes contêm as coordenadas x e y desses pontos.
+
+Para aplicar uma ou várias transformações no polígono basta editar o arquivo 'transformations' que tem o seguinte formato:
+S 0.2 0.8
+T 1 2
+R -45
+
+- S se refere à transformação de escala. Após o S deve aparecer a escala no eixo x e a escala no eixo y
+- T se refere à transformação de translação. Após o T deve vir a transformação no eixo x e então no eixo y
+- R se refere à transformação de rotação. Aṕos o R vem o ângulo da rotação em graus
+
+Pressione ESPAÇO para atualizar as informações do arquivos 'shape' e 'transformations' com a aplicação rodando.
