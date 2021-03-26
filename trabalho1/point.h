@@ -1,6 +1,7 @@
 #ifndef _POINT_H
 #define _POINT_H
 
+// Struct que representa um ponto no plano
 struct _point
 {
     float x, y;
