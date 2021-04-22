@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "SConstruct": "python",
+        "*.html": "njk",
+        "*.make": "makefile",
+        "math.h": "c",
+        "transform.h": "c",
+        "unistd.h": "c"
+    }
+}
