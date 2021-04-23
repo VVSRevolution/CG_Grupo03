@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "SConstruct": "python",
+        "*.html": "njk",
+        "*.make": "makefile",
+        "string": "cpp"
+    }
+}
