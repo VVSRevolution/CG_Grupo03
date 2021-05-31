@@ -206,36 +206,118 @@ Mat44 rotate_y(float degrees)
     return r;
 }
 
+Mat44 translate(float x, float y, float z)
+{
+    Mat44 r;
+
+    // 1o linha
+    r.values[0] = 1.0f;
+    r.values[1] = 0.0f;
+    r.values[2] = 0.0f;
+    r.values[3] = x;
+
+    // 2o linha
+    r.values[4] = 0.0f;
+    r.values[5] = 1.0f;
+    r.values[6] = 0.0f;
+    r.values[7] = y;
+
+    // 3o linha
+    r.values[8] = 0.0f;
+    r.values[9] = 0.0f;
+    r.values[10] = 1.0f;
+    r.values[11] = z;
+
+    //4o linha
+    r.values[12] = 0.0f;
+    r.values[13] = 0.0f;
+    r.values[14] = 0.0f;
+    r.values[15] = 1.0f;
+
+    return r;
+}
+
 // Projeções
-Mat44 orthogonal_projection(float l, float r, float t, float b, float n, float f)
+Mat44 perspective_projection(float fov, float aspectRatio, float n, float f)
 {
     Mat44 p;
 
     // 1o linha
-    p.values[0] = 2 / (r - l);
+    p.values[0] = 1.0f / (aspectRatio * tanf(fov / 2));
     p.values[1] = 0.0f;
     p.values[2] = 0.0f;
-    p.values[3] = -(r + l) / (r - l);
+    p.values[3] = 0.0f;
 
     // 2o linha
     p.values[4] = 0.0f;
-    p.values[5] = 2 / (t - b);
+    p.values[5] = 1.0f / (tanf(fov / 2));
     p.values[6] = 0.0f;
-    p.values[7] = -(t + b) / (t - b);
+    p.values[7] = 0.0f;
 
     // 3o linha
     p.values[8] = 0.0f;
     p.values[9] = 0.0f;
-    p.values[10] = 2 / (n - f);
-    p.values[11] = -(n + f) / (n - f);
+    p.values[10] = -(f + n) / (f - n);
+    p.values[11] = -2*f*n / (f - n);
 
     // 4o linha
     p.values[12] = 0.0f;
     p.values[13] = 0.0f;
-    p.values[14] = 0.0f;
-    p.values[15] = 1.0f;
+    p.values[14] = -1.0f;
+    p.values[15] = 0.0f;
 
     return p;
+}
+
+Point cross_product(Point a, Point b)
+{
+    Point cross = {
+        a.y * b.z - a.z * b.y,
+        a.z * b.x - a.x * b.z,
+        a.x * b.y - a.y * b.x
+    };
+
+    return cross;
+}
+
+float dot_product(Point a, Point b)
+{
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+// retorna 1 se a face está de frente para a câmera
+// retorna 0 se a face está de costas para a câmera
+int back_face_detection(int face)
+{
+    int i = face * 4;
+
+    Point v1 = {
+        cube[i + 1].x - cube[i + 0].x,
+        cube[i + 1].y - cube[i + 0].y,
+        cube[i + 1].z - cube[i + 0].z
+    };
+
+    Point v2 = {
+        cube[i + 2].x - cube[i + 0].x,
+        cube[i + 2].y - cube[i + 0].y,
+        cube[i + 2].z - cube[i + 0].z
+    };
+
+    Point v3 = {
+        cube[i + 3].x - cube[i + 0].x,
+        cube[i + 3].y - cube[i + 0].y,
+        cube[i + 3].z - cube[i + 0].z
+    };
+
+    Point n1 = cross_product(v1, v2);
+    Point n2 = cross_product(v2, v3);
+
+    Point cameraDirection = { 0.0f, 0.0f, -1.0f };
+
+    if (dot_product(cameraDirection, n1) < 0 && dot_product(cameraDirection, n2) < 0)
+        return 1;
+
+    return 0;
 }
 
 void display(void)
@@ -244,12 +326,23 @@ void display(void)
 
     glBegin(GL_QUADS);
     {
-        for (int i = 0; i < 24; i++)
+        for (int i = 0; i < 6; i++)
         {
-            if (i % 4 == 0)
-                glColor3f(cores[i/4][0], cores[i/4][1], cores[i/4][2]);
-            glVertex3f(cube[i].x, cube[i].y, cube[i].z);
+            if (back_face_detection(i))
+            {
+                glColor3f(cores[i][0], cores[i][1], cores[i/4][2]);
+
+                glVertex3f(cube[i * 4 + 0].x, cube[i * 4 + 0].y, cube[i * 4 + 0].z);
+                glVertex3f(cube[i * 4 + 1].x, cube[i * 4 + 1].y, cube[i * 4 + 1].z);
+                glVertex3f(cube[i * 4 + 2].x, cube[i * 4 + 2].y, cube[i * 4 + 2].z);
+                glVertex3f(cube[i * 4 + 3].x, cube[i * 4 + 3].y, cube[i * 4 + 3].z);
+            }
+            else
+            {
+                printf("A face %d foi removida\n", i);
+            }
         }
+        printf("--------------------\n");
     }
     glEnd();
 
@@ -261,6 +354,8 @@ float randf()
     return (float) rand() / RAND_MAX;
 }
 
+int animationRunning = 1;
+
 void timer_callback(int value)
 {
     static float rx = 0;
@@ -271,24 +366,40 @@ void timer_callback(int value)
 
     Mat44 transform = rotate_x(rx);
     transform = mul44(transform, rotate_y(ry));
+    transform = mul44(translate(0, 0, -2.5f), transform);
 
     double aspectRatio = (double) WINDOW_WIDTH / (double) WINDOW_HEIGHT;
-    Mat44 projection = orthogonal_projection(-2.0f, 2.0f,
-        2.0f / aspectRatio, -2.0f / aspectRatio, 1.0f, -1.0f);
-
-
+    Mat44 projection = perspective_projection(45, aspectRatio, 0.1, -1000.0f);
+    
     Mat44 modelViewProjection = mul44(projection, transform);  // view = identity
     for (int i = 0; i < 24; i++)
     {
         Mat41 p = { cubeModel[i].x, cubeModel[i].y, cubeModel[i].z, 1.0f };
         p = mul41(modelViewProjection, p);
-        cube[i].x = p.values[0];
-        cube[i].y = p.values[1];
-        cube[i].z = p.values[2];
+        cube[i].x = p.values[0]  / p.values[3];
+        cube[i].y = p.values[1]  / p.values[3];
+        cube[i].z = p.values[2]  / p.values[3];
     }
     
     glutPostRedisplay();
-    glutTimerFunc(5, timer_callback, 0);
+    if (animationRunning)
+        glutTimerFunc(5, timer_callback, 0);
+}
+
+void keyboard(unsigned char key, int x, int y)
+{
+    if (key == ' ')
+    {
+        if (animationRunning)
+        {
+            animationRunning = 0;
+        }
+        else
+        {
+            animationRunning = 1;
+            glutTimerFunc(0, timer_callback, 0);
+        }
+    }
 }
 
 int main(int argc, char **argv)
@@ -298,7 +409,7 @@ int main(int argc, char **argv)
     glutInitDisplayMode(GLUT_DEPTH | GLUT_SINGLE | GLUT_RGB);
     glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
     // glutInitWindowPosition(100, 100);
-    glutCreateWindow("Projecao Ortogonal");
+    glutCreateWindow("Back-Face Detection");
 
     // OpenGL setup
     glClearColor(0.1f, 0.05f, 0.15f, 1.0f);
@@ -307,6 +418,7 @@ int main(int argc, char **argv)
 
     // Set callback functions
     glutDisplayFunc(display);
+    glutKeyboardFunc(keyboard);
     glutTimerFunc(5, timer_callback, 0);
 
     // Main loop

@@ -44,7 +44,7 @@ void CirclePoints(int x, int y){
 
 void midPointCircle (int r){
     int x = 0, y = r;   // x = 0 e y = raio
-    float d = 5/4 - r;
+    float d = 5.0/4.0 - r;
 	
     CirclePoints(x, y);  // printa primeiro ponto de cada região
 
